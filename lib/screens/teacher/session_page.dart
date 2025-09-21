@@ -1,9 +1,478 @@
+// import 'dart:async';
+// import 'dart:math';
+
+// import 'package:flutter/material.dart';
+// import 'package:intl/intl.dart';
+// import 'package:qr_flutter/qr_flutter.dart';
+
+// class SessionPage extends StatefulWidget {
+//   final String className;
+//   const SessionPage({super.key, required this.className});
+
+//   @override
+//   State<SessionPage> createState() => _SessionPageState();
+// }
+
+// class _SessionPageState extends State<SessionPage> {
+//   DateTime selectedDate = DateTime.now();
+
+//   // Store generated integers
+//   late List<int> randomIntegers;
+//   int currentIndex = 0;
+//   Timer? qrTimer;
+
+//   // Link for QR (static for one session)
+//   final String baseLink = "https://smart-attendance.app/session";
+
+//   void _pickDate() async {
+//     final DateTime? picked = await showDatePicker(
+//       context: context,
+//       initialDate: selectedDate,
+//       firstDate: DateTime(2023, 1),
+//       lastDate: DateTime(2100),
+//       builder: (context, child) {
+//         return Theme(
+//           data: Theme.of(context).copyWith(
+//             colorScheme: ColorScheme.light(
+//               primary: const Color(0xFF3B82F6),
+//               onPrimary: Colors.white,
+//               onSurface: Colors.black,
+//             ),
+//             textButtonTheme: TextButtonThemeData(
+//               style: TextButton.styleFrom(
+//                 foregroundColor: const Color(0xFF3B82F6),
+//               ),
+//             ),
+//           ),
+//           child: child!,
+//         );
+//       },
+//     );
+
+//     if (picked != null) {
+//       setState(() {
+//         selectedDate = picked;
+//       });
+//     }
+//   }
+
+//   /// Start attendance session -> open popup with QR
+//   void _startAttendance() {
+//     // Generate 20 random integers
+//     final random = Random();
+//     randomIntegers = List.generate(20, (_) => random.nextInt(9000) + 1000);
+
+//     currentIndex = 0;
+
+//     // Start timer to update QR every 5 sec
+//     qrTimer?.cancel();
+//     qrTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+//       setState(() {
+//         if (currentIndex < randomIntegers.length - 1) {
+//           currentIndex++;
+//         } else {
+//           timer.cancel(); // stop after last integer
+//         }
+//       });
+//     });
+
+//     // Show dialog with QR
+//     showDialog(
+//       context: context,
+//       barrierDismissible: false,
+//       builder: (_) {
+//         return StatefulBuilder(
+//           builder: (context, setStateDialog) {
+//             String qrData =
+//                 "$baseLink?class=${widget.className}&code=${randomIntegers[currentIndex]}";
+
+//             // Timer inside dialog
+//             qrTimer?.cancel();
+//             qrTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+//               if (currentIndex < randomIntegers.length - 1) {
+//                 currentIndex++;
+//                 setStateDialog(() {});
+//               } else {
+//                 timer.cancel();
+//               }
+//             });
+
+//             return AlertDialog(
+//               shape: RoundedRectangleBorder(
+//                 borderRadius: BorderRadius.circular(14),
+//               ),
+//               title: const Text("Attendance Session"),
+//               content: SizedBox(
+//                 width: 250,   // 👈 give width
+//                 child: Column(
+//                   mainAxisSize: MainAxisSize.min, // 👈 shrink-wrap
+//                   mainAxisAlignment: MainAxisAlignment.center,
+//                   children: [
+//                     QrImageView(
+//                       data: qrData,
+//                       version: QrVersions.auto,
+//                       size: 200.0,  // 👈 fixed height & width prevents crash
+//                     ),
+//                     const SizedBox(height: 10),
+//                     Text(
+//                       "Code: ${randomIntegers[currentIndex]}",
+//                       style: const TextStyle(fontWeight: FontWeight.bold),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//               actions: [
+//                 TextButton(
+//                   onPressed: () {
+//                     qrTimer?.cancel();
+//                     Navigator.of(context).pop();
+//                   },
+//                   child: const Text("End Session"),
+//                 ),
+//               ],
+//             );
+
+//           },
+//         );
+//       },
+//     );
+//   }
+
+//   @override
+//   void dispose() {
+//     qrTimer?.cancel();
+//     super.dispose();
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final isToday = DateTime.now().year == selectedDate.year &&
+//         DateTime.now().month == selectedDate.month &&
+//         DateTime.now().day == selectedDate.day;
+
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text("${widget.className} Attendance"),
+//         backgroundColor: const Color(0xFF3B82F6),
+//         elevation: 2,
+//       ),
+//       body: Padding(
+//         padding: const EdgeInsets.all(16.0),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             Card(
+//               shape: RoundedRectangleBorder(
+//                   borderRadius: BorderRadius.circular(12)),
+//               elevation: 4,
+//               child: ListTile(
+//                 leading: const Icon(Icons.calendar_today,
+//                     color: Color(0xFF3B82F6)),
+//                 title: Text(
+//                   "Selected Date",
+//                   style: TextStyle(
+//                       fontWeight: FontWeight.w600,
+//                       color: Colors.grey[800],
+//                       fontSize: 16),
+//                 ),
+//                 subtitle: Text(
+//                   DateFormat('EEEE, dd MMM yyyy').format(selectedDate),
+//                   style: const TextStyle(fontSize: 14),
+//                 ),
+//                 trailing: IconButton(
+//                   icon: const Icon(Icons.edit_calendar,
+//                       color: Color(0xFF3B82F6)),
+//                   onPressed: _pickDate,
+//                 ),
+//               ),
+//             ),
+//             const SizedBox(height: 32),
+//             Center(
+//               child: isToday
+//                   ? ElevatedButton.icon(
+//                       icon: const Icon(Icons.qr_code_2),
+//                       label: const Text("Start Attendance Session"),
+//                       onPressed: _startAttendance,
+//                       style: ElevatedButton.styleFrom(
+//                         backgroundColor: const Color(0xFF3B82F6),
+//                         foregroundColor: Colors.white,
+//                         padding: const EdgeInsets.symmetric(
+//                             vertical: 18, horizontal: 28),
+//                         shape: RoundedRectangleBorder(
+//                             borderRadius: BorderRadius.circular(14)),
+//                         textStyle: const TextStyle(
+//                             fontSize: 16, fontWeight: FontWeight.w600),
+//                       ),
+//                     )
+//                   : Card(
+//                       shape: RoundedRectangleBorder(
+//                           borderRadius: BorderRadius.circular(12)),
+//                       color: Colors.grey[100],
+//                       elevation: 2,
+//                       child: Padding(
+//                         padding: const EdgeInsets.all(16.0),
+//                         child: Text(
+//                           "Attendance history for this date will appear here.",
+//                           textAlign: TextAlign.center,
+//                           style: TextStyle(
+//                               color: Colors.grey[600],
+//                               fontSize: 16,
+//                               fontWeight: FontWeight.w500),
+//                         ),
+//                       ),
+//                     ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+
+
+
+
+
+
+// import 'dart:async';
+// import 'dart:math';
+// import 'package:flutter/material.dart';
+// import 'package:intl/intl.dart';
+// import 'package:qr_flutter/qr_flutter.dart';
+// import 'package:hive/hive.dart';
+
+// class SessionPage extends StatefulWidget {
+//   final String className;
+//   const SessionPage({super.key, required this.className});
+
+//   @override
+//   State<SessionPage> createState() => _SessionPageState();
+// }
+
+// class _SessionPageState extends State<SessionPage> {
+//   DateTime selectedDate = DateTime.now();
+
+//   // Store generated integers
+//   late List<int> randomIntegers;
+//   int currentIndex = 0;
+//   Timer? qrTimer;
+
+//   // QR session configuration
+//   final int qrFramesCount = 20; // number of QR codes to generate
+//   final Duration qrTimeGap = const Duration(seconds: 5); // interval
+
+//   void _pickDate() async {
+//     final DateTime? picked = await showDatePicker(
+//       context: context,
+//       initialDate: selectedDate,
+//       firstDate: DateTime(2023, 1),
+//       lastDate: DateTime(2100),
+//       builder: (context, child) {
+//         return Theme(
+//           data: Theme.of(context).copyWith(
+//             colorScheme: ColorScheme.light(
+//               primary: const Color(0xFF3B82F6),
+//               onPrimary: Colors.white,
+//               onSurface: Colors.black,
+//             ),
+//             textButtonTheme: TextButtonThemeData(
+//               style: TextButton.styleFrom(
+//                 foregroundColor: const Color(0xFF3B82F6),
+//               ),
+//             ),
+//           ),
+//           child: child!,
+//         );
+//       },
+//     );
+
+//     if (picked != null) {
+//       setState(() {
+//         selectedDate = picked;
+//       });
+//     }
+//   }
+
+//   /// Start attendance session -> open popup with QR
+//   void _startAttendance() {
+//     final box = Hive.box('appBox');
+//     final teacherData = box.get('userData');
+//     final teacherId = teacherData?['id'] ?? "T-001"; // fallback if not set
+
+//     // Generate random codes
+//     final random = Random();
+//     randomIntegers =
+//         List.generate(qrFramesCount, (_) => random.nextInt(9000) + 1000);
+//     currentIndex = 0;
+
+//     qrTimer?.cancel();
+
+//     showDialog(
+//       context: context,
+//       barrierDismissible: false,
+//       builder: (_) {
+//         return StatefulBuilder(
+//           builder: (context, setStateDialog) {
+//             String qrData =
+//                 "$teacherId|${randomIntegers[currentIndex]}";
+
+//             // Start timer inside dialog
+//             qrTimer?.cancel();
+//             qrTimer = Timer.periodic(qrTimeGap, (timer) {
+//               if (currentIndex < randomIntegers.length - 1) {
+//                 currentIndex++;
+//                 setStateDialog(() {});
+//               } else {
+//                 timer.cancel();
+//               }
+//             });
+
+//             return AlertDialog(
+//               shape: RoundedRectangleBorder(
+//                 borderRadius: BorderRadius.circular(14),
+//               ),
+//               title: const Text("Attendance Session"),
+//               content: SizedBox(
+//                 width: 250,
+//                 child: Column(
+//                   mainAxisSize: MainAxisSize.min,
+//                   children: [
+//                     QrImageView(
+//                       data: qrData,
+//                       version: QrVersions.auto,
+//                       size: 200.0,
+//                     ),
+//                     const SizedBox(height: 10),
+//                     Text(
+//                       "Code: ${randomIntegers[currentIndex]}",
+//                       style: const TextStyle(fontWeight: FontWeight.bold),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//               actions: [
+//                 TextButton(
+//                   onPressed: () {
+//                     qrTimer?.cancel();
+//                     Navigator.of(context).pop();
+//                   },
+//                   child: const Text("End Session"),
+//                 ),
+//               ],
+//             );
+//           },
+//         );
+//       },
+//     );
+//   }
+
+//   @override
+//   void dispose() {
+//     qrTimer?.cancel();
+//     super.dispose();
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final isToday = DateTime.now().year == selectedDate.year &&
+//         DateTime.now().month == selectedDate.month &&
+//         DateTime.now().day == selectedDate.day;
+
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text("${widget.className} Attendance"),
+//         backgroundColor: const Color(0xFF3B82F6),
+//         elevation: 2,
+//       ),
+//       body: Padding(
+//         padding: const EdgeInsets.all(16.0),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             Card(
+//               shape: RoundedRectangleBorder(
+//                   borderRadius: BorderRadius.circular(12)),
+//               elevation: 4,
+//               child: ListTile(
+//                 leading: const Icon(Icons.calendar_today,
+//                     color: Color(0xFF3B82F6)),
+//                 title: Text(
+//                   "Selected Date",
+//                   style: TextStyle(
+//                       fontWeight: FontWeight.w600,
+//                       color: Colors.grey[800],
+//                       fontSize: 16),
+//                 ),
+//                 subtitle: Text(
+//                   DateFormat('EEEE, dd MMM yyyy').format(selectedDate),
+//                   style: const TextStyle(fontSize: 14),
+//                 ),
+//                 trailing: IconButton(
+//                   icon: const Icon(Icons.edit_calendar,
+//                       color: Color(0xFF3B82F6)),
+//                   onPressed: _pickDate,
+//                 ),
+//               ),
+//             ),
+//             const SizedBox(height: 32),
+//             Center(
+//               child: isToday
+//                   ? ElevatedButton.icon(
+//                       icon: const Icon(Icons.qr_code_2),
+//                       label: const Text("Start Attendance Session"),
+//                       onPressed: _startAttendance,
+//                       style: ElevatedButton.styleFrom(
+//                         backgroundColor: const Color(0xFF3B82F6),
+//                         foregroundColor: Colors.white,
+//                         padding: const EdgeInsets.symmetric(
+//                             vertical: 18, horizontal: 28),
+//                         shape: RoundedRectangleBorder(
+//                             borderRadius: BorderRadius.circular(14)),
+//                         textStyle: const TextStyle(
+//                             fontSize: 16, fontWeight: FontWeight.w600),
+//                       ),
+//                     )
+//                   : Card(
+//                       shape: RoundedRectangleBorder(
+//                           borderRadius: BorderRadius.circular(12)),
+//                       color: Colors.grey[100],
+//                       elevation: 2,
+//                       child: Padding(
+//                         padding: const EdgeInsets.all(16.0),
+//                         child: Text(
+//                           "Attendance history for this date will appear here.",
+//                           textAlign: TextAlign.center,
+//                           style: TextStyle(
+//                               color: Colors.grey[600],
+//                               fontSize: 16,
+//                               fontWeight: FontWeight.w500),
+//                         ),
+//                       ),
+//                     ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// } 
+
+
+
+
+
+
+
+
 import 'dart:async';
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:hive/hive.dart';
+import 'package:http/http.dart' as http; // ✅ Added for backend communication
+import 'dart:convert'; // ✅ For JSON encoding
 
 class SessionPage extends StatefulWidget {
   final String className;
@@ -21,8 +490,9 @@ class _SessionPageState extends State<SessionPage> {
   int currentIndex = 0;
   Timer? qrTimer;
 
-  // Link for QR (static for one session)
-  final String baseLink = "https://smart-attendance.app/session";
+  // QR session configuration
+  final int qrFramesCount = 20; // number of QR codes to generate
+  final Duration qrTimeGap = const Duration(seconds: 5); // interval
 
   void _pickDate() async {
     final DateTime? picked = await showDatePicker(
@@ -56,27 +526,44 @@ class _SessionPageState extends State<SessionPage> {
     }
   }
 
+  /// ✅ Function to send QR code integer to backend
+  Future<void> _sendCodeToBackend(String teacherId, int code) async {
+    try {
+      final url = Uri.parse("http://10.126.146.104:5000");
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "teacherId": teacherId,
+          "code": code,
+          "timestamp": DateTime.now().toIso8601String(),
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        debugPrint("✅ Code $code sent successfully");
+      } else {
+        debugPrint("⚠️ Failed to send code: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("❌ Error sending code: $e");
+    }
+  }
+
   /// Start attendance session -> open popup with QR
   void _startAttendance() {
-    // Generate 20 random integers
-    final random = Random();
-    randomIntegers = List.generate(20, (_) => random.nextInt(9000) + 1000);
+    final box = Hive.box('appBox');
+    final teacherData = box.get('userData');
+    final teacherId = teacherData?['id'] ?? "T-001"; // fallback if not set
 
+    // Generate random codes
+    final random = Random();
+    randomIntegers =
+        List.generate(qrFramesCount, (_) => random.nextInt(9000) + 1000);
     currentIndex = 0;
 
-    // Start timer to update QR every 5 sec
     qrTimer?.cancel();
-    qrTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      setState(() {
-        if (currentIndex < randomIntegers.length - 1) {
-          currentIndex++;
-        } else {
-          timer.cancel(); // stop after last integer
-        }
-      });
-    });
 
-    // Show dialog with QR
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -84,14 +571,20 @@ class _SessionPageState extends State<SessionPage> {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             String qrData =
-                "$baseLink?class=${widget.className}&code=${randomIntegers[currentIndex]}";
+                "$teacherId|${randomIntegers[currentIndex]}";
 
-            // Timer inside dialog
+            // ✅ Send first code immediately
+            _sendCodeToBackend(teacherId, randomIntegers[currentIndex]);
+
+            // Start timer inside dialog
             qrTimer?.cancel();
-            qrTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+            qrTimer = Timer.periodic(qrTimeGap, (timer) {
               if (currentIndex < randomIntegers.length - 1) {
                 currentIndex++;
                 setStateDialog(() {});
+
+                // ✅ Send updated code to backend
+                _sendCodeToBackend(teacherId, randomIntegers[currentIndex]);
               } else {
                 timer.cancel();
               }
@@ -103,15 +596,14 @@ class _SessionPageState extends State<SessionPage> {
               ),
               title: const Text("Attendance Session"),
               content: SizedBox(
-                width: 250,   // 👈 give width
+                width: 250,
                 child: Column(
-                  mainAxisSize: MainAxisSize.min, // 👈 shrink-wrap
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     QrImageView(
                       data: qrData,
                       version: QrVersions.auto,
-                      size: 200.0,  // 👈 fixed height & width prevents crash
+                      size: 200.0,
                     ),
                     const SizedBox(height: 10),
                     Text(
@@ -131,7 +623,6 @@ class _SessionPageState extends State<SessionPage> {
                 ),
               ],
             );
-
           },
         );
       },

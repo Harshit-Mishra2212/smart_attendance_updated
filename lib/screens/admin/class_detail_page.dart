@@ -35,7 +35,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
         "name": _studentNameController.text,
         "branch": _studentBranchController.text,
         "year": int.tryParse(_studentYearController.text),
-        "class": widget.className,
+        "section": widget.className,
       });
 
       final enrollResponse = await ApiService.enrollStudent({

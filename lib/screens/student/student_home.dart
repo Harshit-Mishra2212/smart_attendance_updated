@@ -175,7 +175,10 @@
 //     );
 //   }
 // } 
+ 
 
+
+ 
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'attendance_page.dart';
@@ -243,15 +246,7 @@ class StudentHomePage extends StatelessWidget {
               );
             },
           ),
-          // IconButton(
-          //   icon: const Icon(Icons.logout),
-          //   tooltip: "Logout",
-          //   onPressed: () {
-          //     ScaffoldMessenger.of(context).showSnackBar(
-          //       const SnackBar(content: Text("Logged out")),
-          //     );
-          //   },
-          // ), 
+   
           IconButton(
   icon: const Icon(Icons.logout),
   tooltip: "Logout",
