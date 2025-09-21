@@ -99,22 +99,27 @@ class _SessionPageState extends State<SessionPage> {
 
             return AlertDialog(
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
+                borderRadius: BorderRadius.circular(14),
+              ),
               title: const Text("Attendance Session"),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  QrImageView(
-                    data: qrData,
-                    version: QrVersions.auto,
-                    size: 200.0,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "Code: ${randomIntegers[currentIndex]}",
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  )
-                ],
+              content: SizedBox(
+                width: 250,   // 👈 give width
+                child: Column(
+                  mainAxisSize: MainAxisSize.min, // 👈 shrink-wrap
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    QrImageView(
+                      data: qrData,
+                      version: QrVersions.auto,
+                      size: 200.0,  // 👈 fixed height & width prevents crash
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      "Code: ${randomIntegers[currentIndex]}",
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -126,6 +131,7 @@ class _SessionPageState extends State<SessionPage> {
                 ),
               ],
             );
+
           },
         );
       },

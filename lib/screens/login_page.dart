@@ -4,6 +4,7 @@ import 'package:smart_attendance/screens/admin/admin_page.dart';
 import 'package:smart_attendance/screens/student/student_home.dart';
 import 'package:smart_attendance/screens/teacher/teacher_home.dart';
 import 'package:smart_attendance/services/api_service.dart'; // ✅ added
+import 'package:hive/hive.dart';
 import '../widgets/role_card.dart';
 import '../theme.dart';
 
@@ -50,78 +51,158 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void handleLogin() {
-    bool valid = false;
+  // void handleLogin() {
+  //   bool valid = false;
 
-    if (selectedRole == 'Student') {
-      valid = studentRollController.text.isNotEmpty &&
-          studentNameController.text.isNotEmpty &&
-          studentBranchController.text.isNotEmpty &&
-          studentSectionController.text.isNotEmpty &&
-          studentDeptController.text.isNotEmpty;
+  //   if (selectedRole == 'Student') {
+  //     valid = studentRollController.text.isNotEmpty &&
+  //         studentNameController.text.isNotEmpty &&
+  //         studentBranchController.text.isNotEmpty &&
+  //         studentSectionController.text.isNotEmpty &&
+  //         studentDeptController.text.isNotEmpty;
 
-      if (valid) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => StudentHomePage(),
-          ),
-        );
-      }
+  //     if (valid) {
+  //       Navigator.push(
+  //         context,
+  //         MaterialPageRoute(
+  //           builder: (context) => StudentHomePage(),
+  //         ),
+  //       );
+  //     }
       
-    } else if (selectedRole == 'Teacher') {
-      valid = teacherNameController.text.isNotEmpty &&
-          teacherDeptController.text.isNotEmpty &&
-          teacherIdController.text.isNotEmpty; // still required for login form
+  //   } else if (selectedRole == 'Teacher') {
+  //     valid = teacherNameController.text.isNotEmpty &&
+  //         teacherDeptController.text.isNotEmpty &&
+  //         teacherIdController.text.isNotEmpty; // still required for login form
 
-      if (valid) {
-        // ✅ Call API to add teacher
-        ApiService.addTeacher({
-          "name": teacherNameController.text,
-          "department": teacherDeptController.text,
-        }).then((response) {
-          if (response["success"] == true || response["message"] != null) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => TeacherHomePage(
-                  teacherName: teacherNameController.text,
-                ),
-              ),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(response["message"] ?? "Failed to add teacher")),
-            );
-          }
-        }).catchError((e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Error: $e")),
-          );
-        });
-      }
+  //     if (valid) {
+  //       // ✅ Call API to add teacher
+  //       ApiService.addTeacher({
+  //         "name": teacherNameController.text,
+  //         "department": teacherDeptController.text,
+  //       }).then((response) {
+  //         if (response["success"] == true || response["message"] != null) {
+  //           Navigator.push(
+  //             context,
+  //             MaterialPageRoute(
+  //               builder: (context) => TeacherHomePage(
+  //                 teacherName: teacherNameController.text,
+  //               ),
+  //             ),
+  //           );
+  //         } else {
+  //           ScaffoldMessenger.of(context).showSnackBar(
+  //             SnackBar(content: Text(response["message"] ?? "Failed to add teacher")),
+  //           );
+  //         }
+  //       }).catchError((e) {
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           SnackBar(content: Text("Error: $e")),
+  //         );
+  //       });
+  //     }
 
-    } else if (selectedRole == 'Administrator') {
-      valid = adminNameController.text.isNotEmpty &&
-          adminDeptController.text.isNotEmpty &&
-          adminIdController.text.isNotEmpty;
+  //   } else if (selectedRole == 'Administrator') {
+  //     valid = adminNameController.text.isNotEmpty &&
+  //         adminDeptController.text.isNotEmpty &&
+  //         adminIdController.text.isNotEmpty;
 
-      if (valid) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AdminPage(),
-          ),
-        );
-      }
+  //     if (valid) {
+  //       Navigator.push(
+  //         context,
+  //         MaterialPageRoute(
+  //           builder: (context) => AdminPage(),
+  //         ),
+  //       );
+  //     }
+  //   }
+
+  //   if (!valid) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('Please fill all fields')),
+  //     );
+  //   }
+  // }
+
+
+
+  void handleLogin() {
+  bool valid = false;
+  final box = Hive.box('appBox');
+
+  if (selectedRole == 'Student') {
+    valid = studentRollController.text.isNotEmpty &&
+        studentNameController.text.isNotEmpty &&
+        studentBranchController.text.isNotEmpty &&
+        studentSectionController.text.isNotEmpty &&
+        studentDeptController.text.isNotEmpty;
+
+    if (valid) {
+      final user = {
+        "role": "Student",
+        "roll": studentRollController.text,
+        "name": studentNameController.text,
+        "branch": studentBranchController.text,
+        "section": studentSectionController.text,
+        "department": studentDeptController.text,
+      };
+      box.put('userData', user);
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const StudentHomePage()),
+      );
     }
+  } else if (selectedRole == 'Teacher') {
+    valid = teacherNameController.text.isNotEmpty &&
+        teacherDeptController.text.isNotEmpty &&
+        teacherIdController.text.isNotEmpty;
 
-    if (!valid) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields')),
+    if (valid) {
+      final user = {
+        "role": "Teacher",
+        "name": teacherNameController.text,
+        "department": teacherDeptController.text,
+        "id": teacherIdController.text,
+      };
+      box.put('userData', user);
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => TeacherHomePage(
+            teacherName: teacherNameController.text,
+          ),
+        ),
+      );
+    }
+  } else if (selectedRole == 'Administrator') {
+    valid = adminNameController.text.isNotEmpty &&
+        adminDeptController.text.isNotEmpty &&
+        adminIdController.text.isNotEmpty;
+
+    if (valid) {
+      final user = {
+        "role": "Administrator",
+        "name": adminNameController.text,
+        "department": adminDeptController.text,
+        "id": adminIdController.text,
+      };
+      box.put('userData', user);
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const AdminPage()),
       );
     }
   }
+
+  if (!valid) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Please fill all fields')),
+    );
+  }
+}
 
   Widget _roleSelectionCard(String title, IconData icon, Color color) {
     return RoleCard(

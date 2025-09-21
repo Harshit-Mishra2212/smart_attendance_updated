@@ -1,6 +1,8 @@
 // lib/screens/teacher_home.dart
 import 'package:flutter/material.dart';
 import 'session_page.dart';
+import 'package:smart_attendance/screens/login_page.dart';
+import 'package:hive/hive.dart';
 
 class TeacherHomePage extends StatefulWidget {
   final String teacherName; // teacher info from login
@@ -43,15 +45,29 @@ class _TeacherHomePageState extends State<TeacherHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Welcome, ${widget.teacherName}"),
-        backgroundColor: const Color(0xFF3B82F6),
-        elevation: 2,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context); // Go back to login/previous screen
-          },
-        ),
+  title: Text("Welcome, ${widget.teacherName}"),
+  backgroundColor: const Color(0xFF3B82F6),
+  elevation: 2,
+  leading: IconButton(
+    icon: const Icon(Icons.arrow_back),
+    onPressed: () {
+      Navigator.pop(context);
+    },
+  ),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.logout),
+      tooltip: 'Logout',
+      onPressed: () {
+              Hive.box('appBox').delete('userData');
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginPage()),
+                (route) => false,
+              );
+            },
+          )
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
